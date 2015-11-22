@@ -49,3 +49,22 @@ def BestResponse(game,strategy_profiles,i):
         # This is here cause of silly python things, need to fix.
         cp[i][m] = 0
     return (move,score)
+
+# This is a special utility function for a game. The game is "Two Thirds of the
+# Average". The idea is that if you are the closest to two thirds of the average
+# , you win.
+def UtilityTwoThirds(i,actions):
+    v = 2.0/3.0 * sum(actions) / len(actions)
+    diff = abs(actions[i] - v)
+    for j in actions:
+        if (diff > (actions[j] - v)):
+            return 0
+    return 1
+
+def BestResponseTwoThirds(i,actions,iter = 10):
+    avg = 2.0 / 3.0 * sum(actions) / len(actions)
+    actions[i] = avg
+    if iter == 0:
+        return avg
+    else:
+        return BestResponseTwoThirds(i,actions,iter - 1)

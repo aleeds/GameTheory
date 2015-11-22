@@ -1,5 +1,6 @@
 import math
 import games
+import random as rand
 import numpy as np
 
 def poisson(lmbda,i):
@@ -42,3 +43,39 @@ def CogHierarchy(game,i,level,lmbda,re=False):
         (move,score) = games.BestResponse(game,strategy_profiles,i)
         strategy_profiles[i][move] = 1
         return (score[0],strategy_profiles[i])
+
+
+def AssignLevel(lmbda,level):
+    distr = NormalizedPoisson(lmbda,level)
+    dens = 0
+    for i in range(len(distr)):
+        dens += distr[i]
+        if rand.random() < dens:
+            return i
+    return len(distr) - 1
+
+def PlayGame(level,lmbda,num_players,player):
+    if level == 0:
+        return rand.randrange(100)
+    choices = []
+    total = 0
+    for i in range(num_players):
+        if i != player:
+            lvl = AssignLevel(lmbda,level)
+            choice = PlayGame(lvl,lmbda,num_players,i)
+            choices.append(choice)
+            total += choice
+        else:
+            choices.append(-100)
+    choices[player] = 2.0 / 3.0 * total / (num_players - 1)
+
+    return games.BestResponseTwoThirds(player,choices,level)
+
+# This function returns two thirds of the average of choices with the game played
+# with num_players who are on average, level lmbda
+def CogHierarchyTwoThirds(lmbda,num_players):
+   players = [AssignLevel(lmbda,num_players) for i in range(num_players)]
+   choices = []
+   for i in range(len(players)):
+       choices.append(PlayGame(players[i],lmbda,num_players,i))
+   return 2.0 / 3.0 * sum(choices) / len(choices)
